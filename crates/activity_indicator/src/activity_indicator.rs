@@ -1,4 +1,3 @@
-use auto_update::DismissMessage;
 use editor::Editor;
 use extension_host::{ExtensionOperation, ExtensionStore};
 use futures::StreamExt;
@@ -6,6 +5,8 @@ use gpui::{
     App, Context, CursorStyle, Entity, EventEmitter, InteractiveElement as _, ParentElement as _,
     Render, SharedString, StatefulInteractiveElement, Styled, Window, actions,
 };
+
+actions!(activity_indicator, [DismissMessage]);
 use language::{
     BinaryStatus, LanguageRegistry, LanguageServerId, LanguageServerName,
     LanguageServerStatusUpdate, ServerHealth,
