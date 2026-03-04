@@ -2116,6 +2116,7 @@ extern "C" fn window_did_change_key_status(this: &Object, selector: Sel, _: id) 
 
         if lock.activated_least_once {
             if let Some(mut callback) = lock.request_frame_callback.take() {
+                #[cfg(not(feature = "macos-blade"))]
                 lock.renderer.set_presents_with_transaction(true);
                 lock.stop_display_link();
                 drop(lock);
@@ -2123,6 +2124,7 @@ extern "C" fn window_did_change_key_status(this: &Object, selector: Sel, _: id) 
 
                 let mut lock = window_state.lock();
                 lock.request_frame_callback = Some(callback);
+                #[cfg(not(feature = "macos-blade"))]
                 lock.renderer.set_presents_with_transaction(false);
                 lock.start_display_link();
             }
@@ -2222,6 +2224,7 @@ extern "C" fn display_layer(this: &Object, _: Sel, _: id) {
     let window_state = unsafe { get_window_state(this) };
     let mut lock = window_state.lock();
     if let Some(mut callback) = lock.request_frame_callback.take() {
+        #[cfg(not(feature = "macos-blade"))]
         lock.renderer.set_presents_with_transaction(true);
         lock.stop_display_link();
         drop(lock);
@@ -2229,6 +2232,7 @@ extern "C" fn display_layer(this: &Object, _: Sel, _: id) {
 
         let mut lock = window_state.lock();
         lock.request_frame_callback = Some(callback);
+        #[cfg(not(feature = "macos-blade"))]
         lock.renderer.set_presents_with_transaction(false);
         lock.start_display_link();
     }

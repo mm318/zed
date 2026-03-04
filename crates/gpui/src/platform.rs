@@ -8,11 +8,14 @@ mod linux;
 #[cfg(target_os = "macos")]
 mod mac;
 
-#[cfg(all(
-    any(target_os = "linux", target_os = "freebsd"),
-    any(feature = "wayland", feature = "x11")
+#[cfg(any(
+    all(
+        any(target_os = "linux", target_os = "freebsd"),
+        any(feature = "x11", feature = "wayland")
+    ),
+    all(target_os = "macos", feature = "macos-blade")
 ))]
-mod wgpu;
+mod blade;
 
 #[cfg(any(test, feature = "test-support"))]
 mod test;
@@ -25,7 +28,13 @@ mod windows;
 
 #[cfg(all(
     feature = "screen-capture",
-    any(target_os = "windows", target_os = "linux", target_os = "freebsd",)
+    any(
+        target_os = "windows",
+        all(
+            any(target_os = "linux", target_os = "freebsd"),
+            any(feature = "wayland", feature = "x11"),
+        )
+    )
 ))]
 pub(crate) mod scap_screen_capture;
 

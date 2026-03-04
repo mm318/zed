@@ -29,9 +29,19 @@ test-support = [
 inspector = ["gpui_macros/inspector"]
 leak-detection = ["backtrace"]
 runtime_shaders = []
+macos-blade = [
+    "blade-graphics",
+    "blade-macros",
+    "blade-util",
+    "bytemuck",
+    "objc2",
+    "objc2-metal",
+]
 wayland = [
     "bitflags",
-    "wgpu",
+    "blade-graphics",
+    "blade-macros",
+    "blade-util",
     "bytemuck",
     "ashpd/wayland",
     "cosmic-text",
@@ -48,7 +58,9 @@ wayland = [
     "open",
 ]
 x11 = [
-    "wgpu",
+    "blade-graphics",
+    "blade-macros",
+    "blade-util",
     "bytemuck",
     "ashpd",
     "cosmic-text",
@@ -163,7 +175,9 @@ oo7 = { version = "0.5.0", default-features = false, features = [
 
 # Used in both windowing options
 ashpd = { workspace = true, optional = true }
-wgpu = { workspace = true, optional = true }
+blade-graphics = { workspace = true, optional = true }
+blade-macros = { workspace = true, optional = true }
+blade-util = { workspace = true, optional = true }
 cosmic-text = { version = "0.17.0", optional = true }
 swash = { version = "0.2.6" }
 # WARNING: If you change this, you must also publish a new version of zed-font-kit to crates.io

@@ -495,6 +495,9 @@ backtrace = "0.3"
 base64 = "0.22"
 bincode = "1.2.1"
 bitflags = "2.6.0"
+blade-graphics = { git = "https://github.com/kvark/blade", rev = "e3cf011ca18a6dfd907d1dedd93e85e21f005fe3" }
+blade-macros = { git = "https://github.com/kvark/blade", rev = "e3cf011ca18a6dfd907d1dedd93e85e21f005fe3" }
+blade-util = { git = "https://github.com/kvark/blade", rev = "e3cf011ca18a6dfd907d1dedd93e85e21f005fe3" }
 brotli = "8.0.2"
 bytes = "1.0"
 cargo_metadata = "0.19"
@@ -565,7 +568,7 @@ markup5ever_rcdom = "0.3.0"
 metal = "0.29"
 minidumper = "0.8"
 moka = { version = "0.12.10", features = ["sync"] }
-naga = { version = "28.0", features = ["wgsl-in"] }
+naga = { version = "25.0", features = ["wgsl-in"] }
 nanoid = "0.4"
 nbformat = "1.0.0"
 nix = "0.29"
@@ -745,7 +748,6 @@ wasmtime = { version = "33", default-features = false, features = [
 wasmtime-wasi = "33"
 wax = "0.7"
 which = "6.0.0"
-wgpu = { git = "https://github.com/zed-industries/wgpu", rev = "e0f83a6cedc5e0b97da1ebe2d638ad103672e0a2" }
 windows-core = "0.61"
 yawc = "0.2.5"
 zeroize = "1.8"
