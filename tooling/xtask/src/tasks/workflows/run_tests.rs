@@ -4,10 +4,7 @@ use gh_workflow::{
 };
 use indexmap::IndexMap;
 
-use crate::tasks::workflows::{
-    steps::{CommonJobConditions, repository_owner_guard_expression},
-    vars::{self, PathCondition},
-};
+use crate::tasks::workflows::vars::{self, PathCondition};
 
 use super::{
     runners::{self, Platform},
@@ -93,10 +90,6 @@ pub(crate) fn run_tests() -> Workflow {
 // and sets GitHub output variables accordingly
 pub fn orchestrate(rules: &[&PathCondition]) -> NamedJob {
     orchestrate_impl(rules, true)
-}
-
-pub fn orchestrate_without_package_filter(rules: &[&PathCondition]) -> NamedJob {
-    orchestrate_impl(rules, false)
 }
 
 fn orchestrate_impl(rules: &[&PathCondition], include_package_filter: bool) -> NamedJob {
@@ -217,7 +210,6 @@ fn orchestrate_impl(rules: &[&PathCondition], include_package_filter: bool) -> N
 
     let job = Job::default()
         .runs_on(runners::LINUX_SMALL)
-        .with_repository_owner_guard()
         .outputs(outputs)
         .add_step(steps::checkout_repo().with_deep_history_on_non_main())
         .add_step(Step::new(step_name.clone()).run(script).id(step_name));
@@ -259,7 +251,7 @@ pub fn tests_pass(jobs: &[NamedJob]) -> NamedJob {
                 .map(|j| j.name.to_string())
                 .collect::<Vec<String>>(),
         )
-        .cond(repository_owner_guard_expression(true))
+        .cond(Expression::new("always()"))
         .add_step(named::bash(&script));
 
     named::job(job)
@@ -378,10 +370,6 @@ pub(crate) fn clippy(platform: Platform) -> NamedJob {
 
 pub(crate) fn run_platform_tests(platform: Platform) -> NamedJob {
     run_platform_tests_impl(platform, true)
-}
-
-pub(crate) fn run_platform_tests_no_filter(platform: Platform) -> NamedJob {
-    run_platform_tests_impl(platform, false)
 }
 
 fn run_platform_tests_impl(platform: Platform, filter_packages: bool) -> NamedJob {

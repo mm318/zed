@@ -8,9 +8,6 @@ pub const LINUX_MEDIUM: Runner = Runner("namespace-profile-4x8-ubuntu-2204");
 pub const LINUX_X86_BUNDLER: Runner = Runner("namespace-profile-32x64-ubuntu-2004");
 pub const LINUX_ARM_BUNDLER: Runner = Runner("namespace-profile-8x32-ubuntu-2004-arm-m4");
 
-// Larger Ubuntu runner with glibc 2.39 for extension bundling
-pub const LINUX_LARGE_RAM: Runner = Runner("namespace-profile-8x32-ubuntu-2404");
-
 pub const MAC_DEFAULT: Runner = Runner("namespace-profile-mac-large");
 pub const WINDOWS_DEFAULT: Runner = Runner("self-32vcpu-windows-2022");
 
@@ -61,9 +58,4 @@ impl std::fmt::Display for Platform {
             Platform::Mac => write!(f, "mac"),
         }
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ReleaseChannel {
-    Nightly,
 }

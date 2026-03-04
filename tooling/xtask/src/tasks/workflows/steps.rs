@@ -1,7 +1,7 @@
 use gh_workflow::*;
 use serde_json::Value;
 
-use crate::tasks::workflows::{runners::Platform, vars, vars::StepOutput};
+use crate::tasks::workflows::{runners::Platform, vars};
 
 const SCCACHE_R2_BUCKET: &str = "sccache-zed";
 
@@ -19,21 +19,6 @@ pub(crate) fn cargo_nextest(platform: Platform) -> Nextest {
 }
 
 impl Nextest {
-    pub(crate) fn with_target(mut self, target: &str) -> Step<Run> {
-        if let Some(nextest_command) = self.0.value.run.as_mut() {
-            nextest_command.push_str(&format!(r#" --target "{target}""#));
-        }
-        self.into()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn with_filter_expr(mut self, filter_expr: &str) -> Self {
-        if let Some(nextest_command) = self.0.value.run.as_mut() {
-            nextest_command.push_str(&format!(r#" -E "{filter_expr}""#));
-        }
-        self
-    }
-
     pub(crate) fn with_changed_packages_filter(mut self, orchestrate_job: &str) -> Self {
         if let Some(nextest_command) = self.0.value.run.as_mut() {
             nextest_command.push_str(&format!(
@@ -62,20 +47,11 @@ enum FetchDepth {
 pub(crate) struct CheckoutStep {
     fetch_depth: FetchDepth,
     name: Option<String>,
-    token: Option<String>,
-    path: Option<String>,
-    repository: Option<String>,
-    ref_: Option<String>,
 }
 
 impl CheckoutStep {
     pub fn with_full_history(mut self) -> Self {
         self.fetch_depth = FetchDepth::Full;
-        self
-    }
-
-    pub fn with_custom_name(mut self, name: &str) -> Self {
-        self.name = Some(name.to_string());
         self
     }
 
@@ -89,25 +65,6 @@ impl CheckoutStep {
         self.with_custom_fetch_depth("${{ github.ref == 'refs/heads/main' && 2 || 350 }}")
     }
 
-    pub fn with_token(mut self, token: &StepOutput) -> Self {
-        self.token = Some(token.to_string());
-        self
-    }
-
-    pub fn with_path(mut self, path: &str) -> Self {
-        self.path = Some(path.to_string());
-        self
-    }
-
-    pub fn with_repository(mut self, repository: &str) -> Self {
-        self.repository = Some(repository.to_string());
-        self
-    }
-
-    pub fn with_ref(mut self, ref_: impl ToString) -> Self {
-        self.ref_ = Some(ref_.to_string());
-        self
-    }
 }
 
 impl From<CheckoutStep> for Step<Use> {
@@ -125,22 +82,6 @@ impl From<CheckoutStep> for Step<Use> {
                 FetchDepth::Shallow => step,
                 FetchDepth::Full => step.add_with(("fetch-depth", 0)),
                 FetchDepth::Custom(depth) => step.add_with(("fetch-depth", depth)),
-            })
-            .map(|step| match value.token {
-                Some(token) => step.add_with(("token", token)),
-                None => step,
-            })
-            .map(|step| match value.path {
-                Some(path) => step.add_with(("path", path)),
-                None => step,
-            })
-            .map(|step| match value.repository {
-                Some(repository) => step.add_with(("repository", repository)),
-                None => step,
-            })
-            .map(|step| match value.ref_ {
-                Some(ref_) => step.add_with(("ref", ref_)),
-                None => step,
             })
     }
 }
@@ -310,30 +251,8 @@ pub struct NamedJob<J: JobType = RunJob> {
 //     }
 // }
 
-pub(crate) const DEFAULT_REPOSITORY_OWNER_GUARD: &str =
-    "(github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')";
-
-pub fn repository_owner_guard_expression(trigger_always: bool) -> Expression {
-    Expression::new(format!(
-        "{}{}",
-        DEFAULT_REPOSITORY_OWNER_GUARD,
-        trigger_always.then_some(" && always()").unwrap_or_default()
-    ))
-}
-
-pub trait CommonJobConditions: Sized {
-    fn with_repository_owner_guard(self) -> Self;
-}
-
-impl CommonJobConditions for Job {
-    fn with_repository_owner_guard(self) -> Self {
-        self.cond(repository_owner_guard_expression(false))
-    }
-}
-
 pub(crate) fn release_job(deps: &[&NamedJob]) -> Job {
     dependant_job(deps)
-        .with_repository_owner_guard()
         .timeout_minutes(60u32)
 }
 
@@ -503,15 +422,3 @@ pub fn git_checkout(ref_name: &dyn std::fmt::Display) -> Step<Run> {
     ))
 }
 
-pub fn authenticate_as_zippy() -> (Step<Use>, StepOutput) {
-    let step = named::uses(
-        "actions",
-        "create-github-app-token",
-        "bef1eaf1c0ac2b148ee2a0a74c65fbe6db0631f1",
-    )
-    .add_with(("app-id", vars::ZED_ZIPPY_APP_ID))
-    .add_with(("private-key", vars::ZED_ZIPPY_APP_PRIVATE_KEY))
-    .id("get-app-token");
-    let output = StepOutput::new(&step, "token");
-    (step, output)
-}
