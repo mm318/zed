@@ -55,7 +55,9 @@ use ui::{
 use util::{ResultExt, size::format_file_size, time::duration_alt_display};
 use util::{debug_panic, defer};
 use workspace::{
-    CollaboratorId, MultiWorkspace, NewTerminal, Toast, Workspace, notifications::NotificationId,
+    CollaboratorId, MultiWorkspace, NewTerminal, Toast, Workspace,
+    notifications::NotificationId,
+    notifications::simple_message_notification::MessageNotification,
 };
 use zed_actions::agent::{Chat, ToggleModelSelector};
 use zed_actions::assistant::OpenRulesLibrary;
@@ -325,6 +327,7 @@ impl AcpServerView {
                 window,
                 Self::handle_agent_servers_updated,
             ),
+            cx.subscribe_in(&project, window, Self::handle_project_event),
         ];
 
         cx.on_release(|this, cx| {
@@ -941,6 +944,57 @@ impl AcpServerView {
             }
             self.reset(window, cx);
         }
+    }
+
+    fn handle_project_event(
+        &mut self,
+        _project: &Entity<Project>,
+        event: &project::Event,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let dominated = matches!(
+            event,
+            project::Event::WorktreeAdded(_) | project::Event::WorktreeRemoved(_)
+        );
+
+        if !dominated {
+            return;
+        }
+
+        if !matches!(self.server_state, ServerState::Connected(_)) {
+            return;
+        }
+
+        let Some(workspace) = self.workspace.upgrade() else {
+            return;
+        };
+
+        let this = cx.entity().downgrade();
+        workspace.update(cx, |workspace, cx| {
+            struct WorkspaceFoldersChangedNotification;
+
+            workspace.show_notification(
+                NotificationId::unique::<WorkspaceFoldersChangedNotification>(),
+                cx,
+                |cx| {
+                    cx.new(move |cx| {
+                        MessageNotification::new(
+                            "Workspace folders changed. Restart agent session to update?",
+                            cx,
+                        )
+                        .primary_message("Dismiss")
+                        .secondary_message("Restart")
+                        .secondary_on_click(move |window, cx| {
+                            this.update(cx, |this, cx| {
+                                this.reset(window, cx);
+                            })
+                            .log_err();
+                        })
+                    })
+                },
+            );
+        });
     }
 
     pub fn workspace(&self) -> &WeakEntity<Workspace> {
