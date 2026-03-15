@@ -99,7 +99,6 @@ name = "activity_indicator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auto_update",
  "editor",
  "extension_host",
  "fs",
@@ -17607,7 +17606,6 @@ name = "title_bar"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auto_update",
  "call",
  "channel",
  "chrono",
@@ -21570,8 +21568,6 @@ dependencies = [
  "askpass",
  "assets",
  "audio",
- "auto_update",
- "auto_update_ui",
  "bincode",
  "breadcrumbs",
  "call",
