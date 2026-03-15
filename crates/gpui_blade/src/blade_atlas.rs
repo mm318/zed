@@ -1,12 +1,12 @@
-use crate::{
-    AtlasKey, AtlasTextureId, AtlasTextureKind, AtlasTile, Bounds, DevicePixels, PlatformAtlas,
-    Point, Size, platform::AtlasTextureList,
-};
 use anyhow::Result;
 use blade_graphics as gpu;
 use blade_util::{BufferBelt, BufferBeltDescriptor};
 use collections::FxHashMap;
 use etagere::BucketedAtlasAllocator;
+use gpui::{
+    AtlasKey, AtlasTextureId, AtlasTextureKind, AtlasTextureList, AtlasTile, Bounds, DevicePixels,
+    PlatformAtlas, Size,
+};
 use parking_lot::Mutex;
 use std::{borrow::Cow, ops, sync::Arc};
 
@@ -275,9 +275,9 @@ impl ops::Index<AtlasTextureKind> for BladeAtlasStorage {
     type Output = AtlasTextureList<BladeAtlasTexture>;
     fn index(&self, kind: AtlasTextureKind) -> &Self::Output {
         match kind {
-            crate::AtlasTextureKind::Monochrome => &self.monochrome_textures,
-            crate::AtlasTextureKind::Subpixel => &self.subpixel_textures,
-            crate::AtlasTextureKind::Polychrome => &self.polychrome_textures,
+            gpui::AtlasTextureKind::Monochrome => &self.monochrome_textures,
+            gpui::AtlasTextureKind::Subpixel => &self.subpixel_textures,
+            gpui::AtlasTextureKind::Polychrome => &self.polychrome_textures,
         }
     }
 }
@@ -285,9 +285,9 @@ impl ops::Index<AtlasTextureKind> for BladeAtlasStorage {
 impl ops::IndexMut<AtlasTextureKind> for BladeAtlasStorage {
     fn index_mut(&mut self, kind: AtlasTextureKind) -> &mut Self::Output {
         match kind {
-            crate::AtlasTextureKind::Monochrome => &mut self.monochrome_textures,
-            crate::AtlasTextureKind::Subpixel => &mut self.subpixel_textures,
-            crate::AtlasTextureKind::Polychrome => &mut self.polychrome_textures,
+            gpui::AtlasTextureKind::Monochrome => &mut self.monochrome_textures,
+            gpui::AtlasTextureKind::Subpixel => &mut self.subpixel_textures,
+            gpui::AtlasTextureKind::Polychrome => &mut self.polychrome_textures,
         }
     }
 }
@@ -296,9 +296,9 @@ impl ops::Index<AtlasTextureId> for BladeAtlasStorage {
     type Output = BladeAtlasTexture;
     fn index(&self, id: AtlasTextureId) -> &Self::Output {
         let textures = match id.kind {
-            crate::AtlasTextureKind::Monochrome => &self.monochrome_textures,
-            crate::AtlasTextureKind::Subpixel => &self.subpixel_textures,
-            crate::AtlasTextureKind::Polychrome => &self.polychrome_textures,
+            gpui::AtlasTextureKind::Monochrome => &self.monochrome_textures,
+            gpui::AtlasTextureKind::Subpixel => &self.subpixel_textures,
+            gpui::AtlasTextureKind::Polychrome => &self.polychrome_textures,
         };
         textures[id.index as usize].as_ref().unwrap()
     }
@@ -358,38 +358,5 @@ impl BladeAtlasTexture {
 
     fn is_unreferenced(&mut self) -> bool {
         self.live_atlas_keys == 0
-    }
-}
-
-impl From<Size<DevicePixels>> for etagere::Size {
-    fn from(size: Size<DevicePixels>) -> Self {
-        etagere::Size::new(size.width.into(), size.height.into())
-    }
-}
-
-impl From<etagere::Point> for Point<DevicePixels> {
-    fn from(value: etagere::Point) -> Self {
-        Point {
-            x: DevicePixels::from(value.x),
-            y: DevicePixels::from(value.y),
-        }
-    }
-}
-
-impl From<etagere::Size> for Size<DevicePixels> {
-    fn from(size: etagere::Size) -> Self {
-        Size {
-            width: DevicePixels::from(size.width),
-            height: DevicePixels::from(size.height),
-        }
-    }
-}
-
-impl From<etagere::Rectangle> for Bounds<DevicePixels> {
-    fn from(rectangle: etagere::Rectangle) -> Self {
-        Bounds {
-            origin: rectangle.min.into(),
-            size: rectangle.size().into(),
-        }
     }
 }

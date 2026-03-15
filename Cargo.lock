@@ -7578,11 +7578,7 @@ dependencies = [
  "backtrace",
  "bindgen 0.71.1",
  "bitflags 2.10.0",
- "blade-graphics",
- "blade-macros",
- "blade-util",
  "block",
- "bytemuck",
  "cbindgen",
  "chrono",
  "circular-buffer",
@@ -7615,7 +7611,6 @@ dependencies = [
  "mach2 0.5.0",
  "media",
  "metal",
- "naga",
  "num_cpus",
  "objc",
  "objc2",
@@ -7659,6 +7654,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpui_blade"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blade-graphics",
+ "blade-macros",
+ "blade-util",
+ "bytemuck",
+ "collections",
+ "etagere",
+ "gpui",
+ "gpui_util",
+ "image",
+ "log",
+ "media",
+ "naga",
+ "parking_lot",
+ "profiling",
+ "raw-window-handle",
+]
+
+[[package]]
 name = "gpui_linux"
 version = "0.1.0"
 dependencies = [
@@ -7666,7 +7683,6 @@ dependencies = [
  "as-raw-xcb-connection",
  "ashpd",
  "bitflags 2.10.0",
- "blade-graphics",
  "bytemuck",
  "calloop",
  "calloop-wayland-source",
@@ -7675,6 +7691,7 @@ dependencies = [
  "filedescriptor",
  "futures 0.3.31",
  "gpui",
+ "gpui_blade",
  "http_client",
  "itertools 0.14.0",
  "libc",
@@ -7729,6 +7746,7 @@ dependencies = [
  "foreign-types 0.5.0",
  "futures 0.3.31",
  "gpui",
+ "gpui_blade",
  "image",
  "itertools 0.14.0",
  "libc",

@@ -6,9 +6,9 @@ use std::{
     sync::Arc,
 };
 
-use blade_graphics as gpu;
 use collections::{FxHashSet, HashMap};
 use futures::channel::oneshot::Receiver;
+use gpui_blade::blade_graphics as gpu;
 
 use raw_window_handle as rwh;
 use wayland_backend::client::ObjectId;
@@ -27,7 +27,6 @@ use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1;
 
 use crate::linux::wayland::{display::WaylandDisplay, serial::SerialKind};
 use crate::linux::{Globals, Output, WaylandClientStatePtr, get_window};
-use gpui::blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 use gpui::{
     AnyWindowHandle, Bounds, Capslock, Decorations, GpuSpecs, Modifiers, Pixels, PlatformAtlas,
     PlatformDisplay, PlatformInput, PlatformInputHandler, PlatformWindow, Point, PromptButton,
@@ -35,6 +34,7 @@ use gpui::{
     WindowBackgroundAppearance, WindowBounds, WindowControlArea, WindowControls, WindowDecorations,
     WindowKind, WindowParams, layer_shell::LayerShellNotSupportedError, px, size,
 };
+use gpui_blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 
 #[derive(Default)]
 pub(crate) struct Callbacks {

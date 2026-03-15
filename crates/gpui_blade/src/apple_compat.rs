@@ -1,4 +1,4 @@
-use super::{BladeContext, BladeRenderer, BladeSurfaceConfig};
+use crate::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 use blade_graphics as gpu;
 use std::{ffi::c_void, ptr::NonNull};
 
@@ -20,7 +20,7 @@ pub unsafe fn new_renderer(
     context: Context,
     _native_window: *mut c_void,
     native_view: *mut c_void,
-    bounds: crate::Size<f32>,
+    bounds: gpui::Size<f32>,
     transparent: bool,
 ) -> Renderer {
     use raw_window_handle as rwh;

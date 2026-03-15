@@ -1,17 +1,17 @@
 // Doing `if let` gives you nice scoping with passes/encoders
 #![allow(irrefutable_let_patterns)]
 
-use super::{BladeAtlas, BladeContext};
-use crate::{
-    Background, Bounds, DevicePixels, GpuSpecs, MonochromeSprite, Path, PlatformAtlas, Point,
-    PolychromeSprite, PrimitiveBatch, Quad, ScaledPixels, Scene, Shadow, Size, Underline,
-    get_gamma_correction_ratios,
-};
+use crate::{BladeAtlas, BladeContext};
 #[cfg(any(test, feature = "test-support"))]
 use anyhow::Result;
 use blade_graphics as gpu;
 use blade_util::{BufferBelt, BufferBeltDescriptor};
 use bytemuck::{Pod, Zeroable};
+use gpui::{
+    Background, Bounds, DevicePixels, GpuSpecs, MonochromeSprite, Path, PlatformAtlas, Point,
+    PolychromeSprite, PrimitiveBatch, Quad, ScaledPixels, Scene, Shadow, Size, Underline,
+    get_gamma_correction_ratios,
+};
 #[cfg(any(test, feature = "test-support"))]
 use image::RgbaImage;
 #[cfg(target_os = "macos")]

@@ -50,7 +50,7 @@ screen-capture = [
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
 anyhow.workspace = true
-blade-graphics.workspace = true
+gpui_blade.workspace = true
 bytemuck = "1"
 collections.workspace = true
 futures.workspace = true

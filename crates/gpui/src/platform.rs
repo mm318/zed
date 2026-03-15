@@ -6,16 +6,6 @@ mod keystroke;
 #[expect(missing_docs)]
 pub mod layer_shell;
 
-#[cfg(any(
-    all(
-        any(target_os = "linux", target_os = "freebsd"),
-        any(feature = "x11", feature = "wayland")
-    ),
-    all(target_os = "macos", feature = "macos-blade")
-))]
-/// Blade GPU backend for rendering.
-pub mod blade;
-
 #[cfg(any(test, feature = "test-support"))]
 mod test;
 
@@ -944,6 +934,39 @@ impl From<etagere::AllocId> for TileId {
 impl From<TileId> for etagere::AllocId {
     fn from(id: TileId) -> Self {
         Self::deserialize(id.0)
+    }
+}
+
+impl From<Size<DevicePixels>> for etagere::Size {
+    fn from(size: Size<DevicePixels>) -> Self {
+        etagere::Size::new(size.width.into(), size.height.into())
+    }
+}
+
+impl From<etagere::Point> for Point<DevicePixels> {
+    fn from(value: etagere::Point) -> Self {
+        Point {
+            x: DevicePixels::from(value.x),
+            y: DevicePixels::from(value.y),
+        }
+    }
+}
+
+impl From<etagere::Size> for Size<DevicePixels> {
+    fn from(size: etagere::Size) -> Self {
+        Size {
+            width: DevicePixels::from(size.width),
+            height: DevicePixels::from(size.height),
+        }
+    }
+}
+
+impl From<etagere::Rectangle> for Bounds<DevicePixels> {
+    fn from(rectangle: etagere::Rectangle) -> Self {
+        Bounds {
+            origin: rectangle.min.into(),
+            size: rectangle.size().into(),
+        }
     }
 }
 

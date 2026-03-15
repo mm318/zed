@@ -2,7 +2,6 @@ use anyhow::{Context as _, anyhow};
 use x11rb::connection::RequestConnection;
 
 use crate::linux::X11ClientStatePtr;
-use gpui::blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 use gpui::{
     AnyWindowHandle, Bounds, Decorations, DevicePixels, ForegroundExecutor, GpuSpecs, Modifiers,
     Pixels, PlatformAtlas, PlatformDisplay, PlatformInput, PlatformInputHandler, PlatformWindow,
@@ -10,9 +9,10 @@ use gpui::{
     Tiling, WindowAppearance, WindowBackgroundAppearance, WindowBounds, WindowControlArea,
     WindowDecorations, WindowKind, WindowParams, px, size,
 };
+use gpui_blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 
-use blade_graphics as gpu;
 use collections::FxHashSet;
+use gpui_blade::blade_graphics as gpu;
 use raw_window_handle as rwh;
 use util::{ResultExt, maybe};
 use x11rb::{

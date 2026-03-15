@@ -15,11 +15,13 @@ path = "src/gpui_macos.rs"
 default = ["gpui/default"]
 test-support = ["gpui/test-support"]
 runtime_shaders = []
+macos-blade = ["gpui_blade"]
 font-kit = ["dep:font-kit"]
 screen-capture = ["gpui/screen-capture"]
 
 [dependencies]
 gpui.workspace = true
+gpui_blade = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 anyhow.workspace = true
