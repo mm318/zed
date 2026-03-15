@@ -1509,11 +1509,9 @@ impl project::ProjectItem for NotebookItem {
                         nbformat::Notebook::V4(notebook) => notebook,
                         // 4.1 - 4.4 are converted to 4.5
                         nbformat::Notebook::Legacy(legacy_notebook) => {
-                            // TODO: Decide if we want to mutate the notebook by including Cell IDs
-                            // and any other conversions
-
                             nbformat::upgrade_legacy_notebook(legacy_notebook)?
                         }
+                        _ => anyhow::bail!("Unsupported notebook format"),
                     }
                 };
 
@@ -1790,6 +1788,9 @@ impl Item for NotebookEditor {
                 Ok(nbformat::Notebook::V4(notebook)) => notebook,
                 Ok(nbformat::Notebook::Legacy(legacy_notebook)) => {
                     nbformat::upgrade_legacy_notebook(legacy_notebook)?
+                }
+                Ok(_) => {
+                    anyhow::bail!("Unsupported notebook format");
                 }
                 Err(e) => {
                     anyhow::bail!("Failed to parse notebook: {:?}", e);

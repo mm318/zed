@@ -6,6 +6,7 @@ use std::{
     sync::Arc,
 };
 
+use blade_graphics as gpu;
 use collections::{FxHashSet, HashMap};
 use futures::channel::oneshot::Receiver;
 
@@ -26,15 +27,14 @@ use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_surface_v1;
 
 use crate::linux::wayland::{display::WaylandDisplay, serial::SerialKind};
 use crate::linux::{Globals, Output, WaylandClientStatePtr, get_window};
+use gpui::blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 use gpui::{
-    AnyWindowHandle, Bounds, Capslock, Decorations, DevicePixels, GpuSpecs, Modifiers, Pixels,
-    PlatformAtlas, PlatformDisplay, PlatformInput, PlatformInputHandler, PlatformWindow, Point,
-    PromptButton, PromptLevel, RequestFrameOptions, ResizeEdge, Scene, Size, Tiling,
-    WindowAppearance, WindowBackgroundAppearance, WindowBounds, WindowControlArea, WindowControls,
-    WindowDecorations, WindowKind, WindowParams, layer_shell::LayerShellNotSupportedError, px,
-    size,
+    AnyWindowHandle, Bounds, Capslock, Decorations, GpuSpecs, Modifiers, Pixels, PlatformAtlas,
+    PlatformDisplay, PlatformInput, PlatformInputHandler, PlatformWindow, Point, PromptButton,
+    PromptLevel, RequestFrameOptions, ResizeEdge, Scene, Size, Tiling, WindowAppearance,
+    WindowBackgroundAppearance, WindowBounds, WindowControlArea, WindowControls, WindowDecorations,
+    WindowKind, WindowParams, layer_shell::LayerShellNotSupportedError, px, size,
 };
-use gpui_wgpu::{CompositorGpuHint, WgpuRenderer, WgpuSurfaceConfig};
 
 #[derive(Default)]
 pub(crate) struct Callbacks {
@@ -53,12 +53,6 @@ struct RawWindow {
     window: *mut c_void,
     display: *mut c_void,
 }
-
-// Safety: The raw pointers in RawWindow point to Wayland surface/display
-// which are valid for the window's lifetime. These are used only for
-// passing to wgpu which needs Send+Sync for surface creation.
-unsafe impl Send for RawWindow {}
-unsafe impl Sync for RawWindow {}
 
 impl rwh::HasWindowHandle for RawWindow {
     fn window_handle(&self) -> Result<rwh::WindowHandle<'_>, rwh::HandleError> {
@@ -97,7 +91,7 @@ pub struct WaylandWindowState {
     outputs: HashMap<ObjectId, Output>,
     display: Option<(ObjectId, Output)>,
     globals: Globals,
-    renderer: WgpuRenderer,
+    renderer: BladeRenderer,
     bounds: Bounds<Pixels>,
     scale: f32,
     input_handler: Option<PlatformInputHandler>,
@@ -317,8 +311,7 @@ impl WaylandWindowState {
         viewport: Option<wp_viewport::WpViewport>,
         client: WaylandClientStatePtr,
         globals: Globals,
-        gpu_context: gpui_wgpu::GpuContext,
-        compositor_gpu: Option<CompositorGpuHint>,
+        gpu_context: &BladeContext,
         options: WindowParams,
         parent: Option<WaylandWindowStatePtr>,
     ) -> anyhow::Result<Self> {
@@ -332,26 +325,21 @@ impl WaylandWindowState {
                     .display_ptr()
                     .cast::<c_void>(),
             };
-            let config = WgpuSurfaceConfig {
-                size: Size {
-                    width: DevicePixels(f32::from(options.bounds.size.width) as i32),
-                    height: DevicePixels(f32::from(options.bounds.size.height) as i32),
+            let config = BladeSurfaceConfig {
+                size: gpu::Extent {
+                    width: f32::from(options.bounds.size.width) as u32,
+                    height: f32::from(options.bounds.size.height) as u32,
+                    depth: 1,
                 },
                 transparent: true,
             };
-            WgpuRenderer::new(gpu_context, &raw_window, config, compositor_gpu)?
+            BladeRenderer::new(gpu_context, &raw_window, config)?
         };
 
         if let WaylandSurfaceState::Xdg(ref xdg_state) = surface_state {
             if let Some(title) = options.titlebar.and_then(|titlebar| titlebar.title) {
                 xdg_state.toplevel.set_title(title.to_string());
             }
-            // Set max window size based on the GPU's maximum texture dimension.
-            // This prevents the window from being resized larger than what the GPU can render.
-            let max_texture_size = renderer.max_texture_size() as i32;
-            xdg_state
-                .toplevel
-                .set_max_size(max_texture_size, max_texture_size);
         }
 
         Ok(Self {
@@ -488,8 +476,7 @@ impl WaylandWindow {
     pub fn new(
         handle: AnyWindowHandle,
         globals: Globals,
-        gpu_context: gpui_wgpu::GpuContext,
-        compositor_gpu: Option<CompositorGpuHint>,
+        gpu_context: &BladeContext,
         client: WaylandClientStatePtr,
         params: WindowParams,
         appearance: WindowAppearance,
@@ -517,7 +504,6 @@ impl WaylandWindow {
                 client,
                 globals,
                 gpu_context,
-                compositor_gpu,
                 params,
                 parent,
             )?)),
@@ -1249,11 +1235,7 @@ impl PlatformWindow for WaylandWindow {
     fn is_subpixel_rendering_supported(&self) -> bool {
         let client = self.borrow().client.get_client();
         let state = client.borrow();
-        state
-            .gpu_context
-            .borrow()
-            .as_ref()
-            .is_some_and(|ctx| ctx.supports_dual_source_blending())
+        state.gpu_context.supports_dual_source_blending()
     }
 
     fn minimize(&self) {
@@ -1374,7 +1356,7 @@ impl PlatformWindow for WaylandWindow {
 
     fn sprite_atlas(&self) -> Arc<dyn PlatformAtlas> {
         let state = self.borrow();
-        state.renderer.sprite_atlas().clone()
+        state.renderer.platform_atlas()
     }
 
     fn show_window_menu(&self, position: Point<Pixels>) {

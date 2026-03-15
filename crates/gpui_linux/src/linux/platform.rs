@@ -46,6 +46,50 @@ pub(crate) const KEYRING_LABEL: &str = "zed-github-account";
 const FILE_PICKER_PORTAL_MISSING: &str =
     "Couldn't open file picker due to missing xdg-desktop-portal implementation.";
 
+#[cfg(any(feature = "x11", feature = "wayland"))]
+pub trait ResultExt {
+    type Ok;
+
+    fn notify_err(self, msg: &'static str) -> Self::Ok;
+}
+
+#[cfg(any(feature = "x11", feature = "wayland"))]
+impl<T> ResultExt for anyhow::Result<T> {
+    type Ok = T;
+
+    fn notify_err(self, msg: &'static str) -> T {
+        match self {
+            Ok(v) => v,
+            Err(e) => {
+                use ashpd::desktop::notification::{Notification, NotificationProxy, Priority};
+                use futures::executor::block_on;
+
+                let proxy = block_on(NotificationProxy::new()).expect(msg);
+
+                let notification_id = "dev.zed.Oops";
+                block_on(
+                    proxy.add_notification(
+                        notification_id,
+                        Notification::new("Zed failed to launch")
+                            .body(Some(
+                                format!(
+                                    "{e:?}. See https://zed.dev/docs/linux for troubleshooting steps."
+                                )
+                                .as_str(),
+                            ))
+                            .priority(Priority::High)
+                            .icon(ashpd::desktop::Icon::with_names(&[
+                                "dialog-question-symbolic",
+                            ])),
+                    )
+                ).expect(msg);
+
+                panic!("{msg}");
+            }
+        }
+    }
+}
+
 pub(crate) trait LinuxClient {
     fn compositor_name(&self) -> &'static str;
     fn with_common<R>(&self, f: impl FnOnce(&mut LinuxCommon) -> R) -> R;
@@ -1035,46 +1079,6 @@ pub(super) fn modifiers_from_xkb(keymap_state: &State) -> gpui::Modifiers {
 pub(super) fn capslock_from_xkb(keymap_state: &State) -> gpui::Capslock {
     let on = keymap_state.mod_name_is_active(xkb::MOD_NAME_CAPS, xkb::STATE_MODS_EFFECTIVE);
     gpui::Capslock { on }
-}
-
-/// Resolve a Linux `dev_t` to PCI vendor/device IDs via sysfs, returning a
-/// [`CompositorGpuHint`] that the GPU adapter selection code can use to
-/// prioritize the compositor's rendering device.
-#[cfg(any(feature = "wayland", feature = "x11"))]
-pub(super) fn compositor_gpu_hint_from_dev_t(dev: u64) -> Option<gpui_wgpu::CompositorGpuHint> {
-    fn dev_major(dev: u64) -> u32 {
-        ((dev >> 8) & 0xfff) as u32 | (((dev >> 32) & !0xfff) as u32)
-    }
-
-    fn dev_minor(dev: u64) -> u32 {
-        (dev & 0xff) as u32 | (((dev >> 12) & !0xff) as u32)
-    }
-
-    fn read_sysfs_hex_id(path: &str) -> Option<u32> {
-        let content = std::fs::read_to_string(path).ok()?;
-        let trimmed = content.trim().strip_prefix("0x").unwrap_or(content.trim());
-        u32::from_str_radix(trimmed, 16).ok()
-    }
-
-    let major = dev_major(dev);
-    let minor = dev_minor(dev);
-
-    let vendor_path = format!("/sys/dev/char/{major}:{minor}/device/vendor");
-    let device_path = format!("/sys/dev/char/{major}:{minor}/device/device");
-
-    let vendor_id = read_sysfs_hex_id(&vendor_path)?;
-    let device_id = read_sysfs_hex_id(&device_path)?;
-
-    log::info!(
-        "Compositor GPU hint: vendor={:#06x}, device={:#06x} (from dev {major}:{minor})",
-        vendor_id,
-        device_id,
-    );
-
-    Some(gpui_wgpu::CompositorGpuHint {
-        vendor_id,
-        device_id,
-    })
 }
 
 #[cfg(test)]

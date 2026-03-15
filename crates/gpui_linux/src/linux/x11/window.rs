@@ -2,15 +2,16 @@ use anyhow::{Context as _, anyhow};
 use x11rb::connection::RequestConnection;
 
 use crate::linux::X11ClientStatePtr;
+use gpui::blade::{BladeContext, BladeRenderer, BladeSurfaceConfig};
 use gpui::{
     AnyWindowHandle, Bounds, Decorations, DevicePixels, ForegroundExecutor, GpuSpecs, Modifiers,
     Pixels, PlatformAtlas, PlatformDisplay, PlatformInput, PlatformInputHandler, PlatformWindow,
     Point, PromptButton, PromptLevel, RequestFrameOptions, ResizeEdge, ScaledPixels, Scene, Size,
     Tiling, WindowAppearance, WindowBackgroundAppearance, WindowBounds, WindowControlArea,
-    WindowDecorations, WindowKind, WindowParams, px,
+    WindowDecorations, WindowKind, WindowParams, px, size,
 };
-use gpui_wgpu::{CompositorGpuHint, WgpuRenderer, WgpuSurfaceConfig};
 
+use blade_graphics as gpu;
 use collections::FxHashSet;
 use raw_window_handle as rwh;
 use util::{ResultExt, maybe};
@@ -29,7 +30,8 @@ use x11rb::{
 };
 
 use std::{
-    cell::RefCell, ffi::c_void, fmt::Display, num::NonZeroU32, ptr::NonNull, rc::Rc, sync::Arc,
+    cell::RefCell, ffi::c_void, fmt::Display, num::NonZeroU32, ops::Div, ptr::NonNull, rc::Rc,
+    sync::Arc,
 };
 
 use super::{X11Display, XINPUT_ALL_DEVICE_GROUPS, XINPUT_ALL_DEVICES};
@@ -88,11 +90,12 @@ x11rb::atom_manager! {
 fn query_render_extent(
     xcb: &Rc<XCBConnection>,
     x_window: xproto::Window,
-) -> anyhow::Result<Size<DevicePixels>> {
+) -> anyhow::Result<gpu::Extent> {
     let reply = get_reply(|| "X11 GetGeometry failed.", xcb.get_geometry(x_window))?;
-    Ok(Size {
-        width: DevicePixels(reply.width as i32),
-        height: DevicePixels(reply.height as i32),
+    Ok(gpu::Extent {
+        width: reply.width as u32,
+        height: reply.height as u32,
+        depth: 1,
     })
 }
 
@@ -232,12 +235,6 @@ struct RawWindow {
     visual_id: u32,
 }
 
-// Safety: The raw pointers in RawWindow point to X11 connection
-// which is valid for the window's lifetime. These are used only for
-// passing to wgpu which needs Send+Sync for surface creation.
-unsafe impl Send for RawWindow {}
-unsafe impl Sync for RawWindow {}
-
 #[derive(Default)]
 pub struct Callbacks {
     request_frame: Option<Box<dyn FnMut(RequestFrameOptions)>>,
@@ -265,7 +262,7 @@ pub struct X11WindowState {
     pub(crate) last_sync_counter: Option<sync::Int64>,
     bounds: Bounds<Pixels>,
     scale_factor: f32,
-    renderer: WgpuRenderer,
+    renderer: BladeRenderer,
     display: Rc<dyn PlatformDisplay>,
     input_handler: Option<PlatformInputHandler>,
     appearance: WindowAppearance,
@@ -393,8 +390,7 @@ impl X11WindowState {
         handle: AnyWindowHandle,
         client: X11ClientStatePtr,
         executor: ForegroundExecutor,
-        gpu_context: gpui_wgpu::GpuContext,
-        compositor_gpu: Option<CompositorGpuHint>,
+        gpu_context: &BladeContext,
         params: WindowParams,
         xcb: &Rc<XCBConnection>,
         client_side_decorations_supported: bool,
@@ -672,7 +668,7 @@ impl X11WindowState {
                     window_id: x_window,
                     visual_id: visual.id,
                 };
-                let config = WgpuSurfaceConfig {
+                let config = BladeSurfaceConfig {
                     // Note: this has to be done after the GPU init, or otherwise
                     // the sizes are immediately invalidated.
                     size: query_render_extent(xcb, x_window)?,
@@ -682,7 +678,7 @@ impl X11WindowState {
                     // too
                     transparent: false,
                 };
-                WgpuRenderer::new(gpu_context, &raw_window, config, compositor_gpu)?
+                BladeRenderer::new(gpu_context, &raw_window, config)?
             };
 
             // Set max window size hints based on the GPU's maximum texture dimension.
@@ -751,7 +747,11 @@ impl X11WindowState {
     }
 
     fn content_size(&self) -> Size<Pixels> {
-        self.bounds.size
+        let size = self.renderer.viewport_size();
+        Size {
+            width: size.width.into(),
+            height: size.height.into(),
+        }
     }
 }
 
@@ -807,8 +807,7 @@ impl X11Window {
         handle: AnyWindowHandle,
         client: X11ClientStatePtr,
         executor: ForegroundExecutor,
-        gpu_context: gpui_wgpu::GpuContext,
-        compositor_gpu: Option<CompositorGpuHint>,
+        gpu_context: &BladeContext,
         params: WindowParams,
         xcb: &Rc<XCBConnection>,
         client_side_decorations_supported: bool,
@@ -825,7 +824,6 @@ impl X11Window {
                 client,
                 executor,
                 gpu_context,
-                compositor_gpu,
                 params,
                 xcb,
                 client_side_decorations_supported,
@@ -1177,7 +1175,10 @@ impl X11WindowStatePtr {
             }
 
             let gpu_size = query_render_extent(&self.xcb, self.x_window)?;
-            state.renderer.update_drawable_size(gpu_size);
+            state.renderer.update_drawable_size(size(
+                DevicePixels(gpu_size.width as i32),
+                DevicePixels(gpu_size.height as i32),
+            ));
             let result = (is_resize, state.content_size(), state.scale_factor);
             if let Some(value) = state.last_sync_counter.take() {
                 check_reply(
@@ -1277,10 +1278,12 @@ impl PlatformWindow for X11Window {
     }
 
     fn content_size(&self) -> Size<Pixels> {
-        // After the wgpu migration, X11WindowState::content_size() returns logical pixels
-        // (bounds.size is already divided by scale_factor in set_bounds), so no further
-        // division is needed here. This matches the Wayland implementation.
-        self.0.state.borrow().content_size()
+        // We divide by the scale factor here because this value is queried to determine how much to draw,
+        // but it will be multiplied later by the scale to adjust for scaling.
+        let state = self.0.state.borrow();
+        state
+            .content_size()
+            .map(|size| size.div(state.scale_factor))
     }
 
     fn resize(&mut self, size: Size<Pixels>) {
@@ -1480,11 +1483,7 @@ impl PlatformWindow for X11Window {
             .upgrade()
             .map(|ref_cell| {
                 let state = ref_cell.borrow();
-                state
-                    .gpu_context
-                    .borrow()
-                    .as_ref()
-                    .is_some_and(|ctx| ctx.supports_dual_source_blending())
+                state.gpu_context.supports_dual_source_blending()
             })
             .unwrap_or_default()
     }
@@ -1615,7 +1614,7 @@ impl PlatformWindow for X11Window {
 
     fn sprite_atlas(&self) -> Arc<dyn PlatformAtlas> {
         let inner = self.0.state.borrow();
-        inner.renderer.sprite_atlas().clone()
+        inner.renderer.platform_atlas()
     }
 
     fn show_window_menu(&self, position: Point<Pixels>) {

@@ -93,8 +93,6 @@ members = [
     "crates/gpui_platform",
     "crates/gpui_tokio",
     "crates/gpui_util",
-    "crates/gpui_web",
-    "crates/gpui_wgpu",
     "crates/gpui_windows",
     "crates/html_to_markdown",
     "crates/http_client",
@@ -334,8 +332,6 @@ gpui_linux = { path = "crates/gpui_linux", default-features = false }
 gpui_macos = { path = "crates/gpui_macos", default-features = false }
 gpui_macros = { path = "crates/gpui_macros" }
 gpui_platform = { path = "crates/gpui_platform", default-features = false }
-gpui_web = { path = "crates/gpui_web" }
-gpui_wgpu = { path = "crates/gpui_wgpu" }
 gpui_windows = { path = "crates/gpui_windows", default-features = false }
 gpui_tokio = { path = "crates/gpui_tokio" }
 gpui_util = { path = "crates/gpui_util" }
@@ -515,6 +511,9 @@ backtrace = "0.3"
 base64 = "0.22"
 bincode = "1.2.1"
 bitflags = "2.6.0"
+blade-graphics = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
+blade-macros = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
+blade-util = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
 brotli = "8.0.2"
 bytes = "1.0"
 cargo_metadata = "0.19"
@@ -588,7 +587,7 @@ markup5ever_rcdom = "0.3.0"
 metal = "0.33"
 minidumper = "0.8"
 moka = { version = "0.12.10", features = ["sync"] }
-naga = { version = "28.0", features = ["wgsl-in"] }
+naga = { version = "27.0", features = ["wgsl-in"] }
 nanoid = "0.4"
 nbformat = "1.1.0"
 nix = "0.29"
@@ -770,7 +769,6 @@ wax = "0.7"
 which = "6.0.0"
 wasm-bindgen = "0.2.113"
 web-time = "1.1.0"
-wgpu = { git = "https://github.com/zed-industries/wgpu", rev = "6e0c2546d99dad72ce6ffb5b04349e6a4ce96e6d" }
 windows-core = "0.61"
 yawc = "0.2.5"
 zeroize = "1.8"
