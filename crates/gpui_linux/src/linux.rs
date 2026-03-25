@@ -1,3 +1,5 @@
+#[cfg(any(feature = "wayland", feature = "x11"))]
+mod cosmic_text_system;
 mod dispatcher;
 mod headless;
 mod keyboard;

@@ -1,0 +1,38 @@
+[package]
+name = "gpui_blade"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+license = "Apache-2.0"
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/gpui_blade.rs"
+
+[features]
+default = []
+test-support = ["gpui/test-support", "image"]
+
+[dependencies]
+anyhow.workspace = true
+blade-graphics.workspace = true
+blade-macros.workspace = true
+blade-util.workspace = true
+bytemuck = "1.23.1"
+collections.workspace = true
+etagere = "0.2"
+gpui.workspace = true
+gpui_util.workspace = true
+image = { workspace = true, optional = true }
+log.workspace = true
+parking_lot.workspace = true
+profiling.workspace = true
+raw-window-handle = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+media.workspace = true
+
+[build-dependencies]
+naga.workspace = true

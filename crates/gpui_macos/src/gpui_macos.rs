@@ -14,10 +14,17 @@ mod pasteboard;
 #[cfg(feature = "screen-capture")]
 mod screen_capture;
 
+#[cfg(not(feature = "macos-blade"))]
 mod metal_atlas;
+#[cfg(not(feature = "macos-blade"))]
 pub mod metal_renderer;
 
+use core_video::image_buffer::CVImageBuffer;
+#[cfg(not(feature = "macos-blade"))]
 use metal_renderer as renderer;
+
+#[cfg(feature = "macos-blade")]
+use gpui_blade as renderer;
 
 #[cfg(feature = "font-kit")]
 mod open_type;

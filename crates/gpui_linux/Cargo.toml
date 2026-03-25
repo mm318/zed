@@ -16,7 +16,6 @@ default = ["wayland", "x11"]
 test-support = ["gpui/test-support"]
 wayland = [
     "bitflags",
-    "gpui_wgpu",
     "ashpd/wayland",
 
     "calloop-wayland-source",
@@ -32,7 +31,6 @@ wayland = [
     "gpui/wayland",
 ]
 x11 = [
-    "gpui_wgpu",
     "ashpd",
 
     "as-raw-xcb-connection",
@@ -52,12 +50,14 @@ screen-capture = [
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
 anyhow.workspace = true
+gpui_blade.workspace = true
 bytemuck = "1"
 collections.workspace = true
 image.workspace = true
 futures.workspace = true
+cosmic-text = "0.17.0"
+font-kit = { git = "https://github.com/zed-industries/font-kit", rev = "110523127440aefb11ce0cf280ae7c5071337ec5", package = "zed-font-kit", version = "0.14.1-zed", features = ["source-fontconfig-dlopen"] }
 gpui.workspace = true
-gpui_wgpu = { workspace = true, optional = true, features = ["font-kit"] }
 http_client.workspace = true
 itertools.workspace = true
 libc.workspace = true
