@@ -1510,9 +1510,6 @@ impl project::ProjectItem for NotebookItem {
                         nbformat::Notebook::V4(notebook) => notebook,
                         // 4.1 - 4.4 are converted to 4.5
                         nbformat::Notebook::Legacy(legacy_notebook) => {
-                            // TODO: Decide if we want to mutate the notebook by including Cell IDs
-                            // and any other conversions
-
                             nbformat::upgrade_legacy_notebook(legacy_notebook)?
                         }
                         nbformat::Notebook::V3(v3_notebook) => {

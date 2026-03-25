@@ -88,14 +88,13 @@ members = [
     "crates/go_to_line",
     "crates/google_ai",
     "crates/gpui",
+    "crates/gpui_blade",
     "crates/gpui_linux",
     "crates/gpui_macos",
     "crates/gpui_macros",
     "crates/gpui_platform",
     "crates/gpui_tokio",
     "crates/gpui_util",
-    "crates/gpui_web",
-    "crates/gpui_wgpu",
     "crates/gpui_windows",
     "crates/html_to_markdown",
     "crates/http_client",
@@ -330,12 +329,11 @@ git_ui = { path = "crates/git_ui" }
 go_to_line = { path = "crates/go_to_line" }
 google_ai = { path = "crates/google_ai" }
 gpui = { path = "crates/gpui", default-features = false }
+gpui_blade = { path = "crates/gpui_blade" }
 gpui_linux = { path = "crates/gpui_linux", default-features = false }
 gpui_macos = { path = "crates/gpui_macos", default-features = false }
 gpui_macros = { path = "crates/gpui_macros" }
 gpui_platform = { path = "crates/gpui_platform", default-features = false }
-gpui_web = { path = "crates/gpui_web" }
-gpui_wgpu = { path = "crates/gpui_wgpu" }
 gpui_windows = { path = "crates/gpui_windows", default-features = false }
 gpui_tokio = { path = "crates/gpui_tokio" }
 gpui_util = { path = "crates/gpui_util" }
@@ -513,7 +511,11 @@ aws-smithy-runtime-api = { version = "1.9.2", features = ["http-1x", "client"] }
 aws-smithy-types = { version = "1.3.4", features = ["http-body-1-x"] }
 backtrace = "0.3"
 base64 = "0.22"
+bincode = "1.2.1"
 bitflags = "2.6.0"
+blade-graphics = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
+blade-macros = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
+blade-util = { git = "https://github.com/kvark/blade", rev = "a447b2e89c5dd4333951043238ba2cc66dbe8f49" }
 brotli = "8.0.2"
 bytes = "1.0"
 cargo_metadata = "0.19"
@@ -596,7 +598,7 @@ markup5ever_rcdom = "0.3.0"
 metal = "0.33"
 minidumper = "0.9"
 moka = { version = "0.12.10", features = ["sync"] }
-naga = { version = "28.0", features = ["wgsl-in"] }
+naga = { version = "27.0", features = ["wgsl-in"] }
 nanoid = "0.4"
 nbformat = "1.2.0"
 nix = "0.29"
@@ -779,7 +781,6 @@ wax = "0.7"
 which = "6.0.0"
 wasm-bindgen = "0.2.113"
 web-time = "1.1.0"
-wgpu = { git = "https://github.com/zed-industries/wgpu", rev = "465557eccfe77c840a9b4936f1408da9503372c4" }
 windows-core = "0.61"
 yawc = "0.2.5"
 zeroize = "1.8"
