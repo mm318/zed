@@ -1,21 +1,19 @@
-# Zed
+# Zed (Blade Build)
 
-[![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
-[![CI](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml/badge.svg)](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml)
+A custom build of [Zed](https://github.com/zed-industries/zed), a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
 
-Welcome to Zed, a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
+## What's Different
+
+This fork uses the **Blade** graphics backend instead of wgpu, and includes the following changes from upstream Zed:
+
+- **Graphics backend**: Uses [Blade](https://github.com/kvark/blade) (v0.7.1) with naga 27.0
+- **No telemetry**: Telemetry collection and reporting is disabled
+- **No auto-update**: The self-update feature is removed; this build won't overwrite itself with upstream releases
+- **Version**: `0.229.0-blade`
 
 ---
 
-### Installation
-
-On macOS, Linux, and Windows you can [download Zed directly](https://zed.dev/download) or install Zed via your local package manager ([macOS](https://zed.dev/docs/installation#macos)/[Linux](https://zed.dev/docs/linux#installing-via-a-package-manager)/[Windows](https://zed.dev/docs/windows#package-managers)).
-
-Other platforms are not yet available:
-
-- Web ([tracking issue](https://github.com/zed-industries/zed/issues/5396))
-
-### Developing Zed
+### Building
 
 - [Building Zed for macOS](./docs/src/development/macos.md)
 - [Building Zed for Linux](./docs/src/development/linux.md)
@@ -24,8 +22,6 @@ Other platforms are not yet available:
 ### Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for ways you can contribute to Zed.
-
-Also... we're hiring! Check out our [jobs](https://zed.dev/jobs) page for open roles.
 
 ### Licensing
 
@@ -41,6 +37,6 @@ We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automati
 
 Zed is developed by **Zed Industries, Inc.**, a for-profit company.
 
-If you’d like to financially support the project, you can do so via GitHub Sponsors.
+If you'd like to financially support the project, you can do so via GitHub Sponsors.
 Sponsorships go directly to Zed Industries and are used as general company revenue.
 There are no perks or entitlements associated with sponsorship.
