@@ -649,7 +649,11 @@ impl ConversationView {
         });
 
         let connection_entry = connection_store.update(cx, |store, cx| {
-            store.request_connection(connection_key, agent.clone(), cx)
+            if resume_session_id.is_none() {
+                store.request_new_connection(connection_key, agent.clone(), cx)
+            } else {
+                store.request_connection(connection_key, agent.clone(), cx)
+            }
         });
 
         let connection_entry_subscription =
