@@ -115,7 +115,25 @@ impl AgentConnectionStore {
         if let Some(entry) = self.entries.get(&key) {
             return entry.clone();
         }
+        self.create_connection(key, server, cx)
+    }
 
+    pub fn request_new_connection(
+        &mut self,
+        key: Agent,
+        server: Rc<dyn AgentServer>,
+        cx: &mut Context<Self>,
+    ) -> Entity<AgentConnectionEntry> {
+        self.entries.remove(&key);
+        self.create_connection(key, server, cx)
+    }
+
+    fn create_connection(
+        &mut self,
+        key: Agent,
+        server: Rc<dyn AgentServer>,
+        cx: &mut Context<Self>,
+    ) -> Entity<AgentConnectionEntry> {
         let (mut new_version_rx, connect_task) = self.start_connection(server, cx);
         let connect_task = connect_task.shared();
 

@@ -773,7 +773,11 @@ impl ConversationView {
         let session_work_dirs = work_dirs.unwrap_or_else(|| project.read(cx).default_path_list(cx));
 
         let connection_entry = connection_store.update(cx, |store, cx| {
-            store.request_connection(connection_key, agent.clone(), cx)
+            if resume_session_id.is_none() {
+                store.request_new_connection(connection_key, agent.clone(), cx)
+            } else {
+                store.request_connection(connection_key, agent.clone(), cx)
+            }
         });
 
         let connection_entry_subscription =
